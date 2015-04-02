@@ -39,7 +39,7 @@ public class TargetCBORRepository implements TargetRepository {
 
   private String location;
   private TargetModel targetModel;
-  private boolean writeToElastic;		// to be read from the connfig file 
+  private boolean writeToElastic;		// to be read from the connfig file if found to be true write to elasticsearch
   private int elasticPageCounter;
   private String elasticServerName;
   private Client client;
@@ -47,6 +47,7 @@ public class TargetCBORRepository implements TargetRepository {
   
   public TargetCBORRepository(){
 	targetModel = new TargetModel("Kien Pham", "kien.pham@nyu.edu");//This contact information should be read from config file
+	writeToElastic = true; 	// TODO: remove this and read from config
 	
 	// initialize client
 	if (writeToElastic) 
@@ -60,6 +61,9 @@ public class TargetCBORRepository implements TargetRepository {
 
 public TargetCBORRepository(String loc){
 	targetModel = new TargetModel("Kien Pham", "kien.pham@nyu.edu");//This contact information should be read from config file
+	writeToElastic = true; 	// TODO: remove this and read from config
+	
+	
 	  this.location = loc;
 	 if (writeToElastic)
 	 initializeClient();
@@ -121,16 +125,24 @@ public TargetCBORRepository(String loc){
 		this.targetModel.setTimestamp();
 		this.targetModel.setUrl(url);
 		this.targetModel.setContent(target.getSource());
-
+		
+		
+		if(writeToElastic) {
+			
+			throwToElastic(targetModel);
+			
+		} else 	{
 		CBORFactory f = new CBORFactory();
     	ObjectMapper mapper = new ObjectMapper(f);
 		File dir = new File(location + File.separator + URLEncoder.encode(host));
 		if(!dir.exists()){
             dir.mkdir();
-        }
+        
 		File out = new File(dir.toString() + File.separator + URLEncoder.encode(url));
 		mapper.writeValue(out, this.targetModel);
-  
+		
+		}
+    }
     }
     catch (IOException ex) {
       ex.printStackTrace();
